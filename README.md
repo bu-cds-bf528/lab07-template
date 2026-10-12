@@ -32,10 +32,11 @@ if one is not already open).
 
 ## Basic Docker Commands
 
-### Pulling an image
+The next two sections will cover when you want to pull a pre-built images for commonly
+used tools. This is one of the main advantages of Docker compared to Conda, and enables
+you to *mostly* seamlessly pull and use containers easily. 
 
-One of the huge advantages of Docker is the wide availability of ready-to-go and
-verified containers. 
+### Pulling an image
 
 For now, run the following command in your terminal:
 
@@ -43,7 +44,6 @@ For now, run the following command in your terminal:
 docker pull python
 ```
 
-Because we did not specify a tag, Docker pulls the `latest` tag by default.
 
 Use the `docker images` command to view the images you have available on your system.
 
@@ -52,10 +52,9 @@ Use the `docker images` command to view the images you have available on your sy
 docker images
 ```
 
-What version of python is installed? Can you tell from the output of the `docker
-images` command? 
+Because we did not specify a tag, Docker pulls the `latest` tag by default.
 
-To find out what version of python is installed, you can use the `docker run`
+To find out the exact version of python is installed, you can use the `docker run`
 command to start a container from the image and then open a bash shell to
 interact with the container.
 
@@ -80,12 +79,15 @@ What version of python is installed?
 When you are done, you can exit the container by typing `exit` and pressing enter.
 
 ### Pulling a specific version of an image
+Navigate to the [Docker Hub](https://hub.docker.com/) website and search for `python`.
+Click on the link for the offial python image (non-hardened)
 
 Back on the docker hub python image page, click on the `Tags` tab. Find a tag
 that is **not** `latest`, refers to an older version of python, and has `slim`
-in the name (for example, `3.11-slim`).
+in the name (for example, `3.12.15-slim-trixie`).
 
-Pull that tag by adding it after the image name with a colon:
+Pull that tag by adding it after the image name with a colon or using the copy button
+in the link:
 
 ```
 docker pull python:<tag>
@@ -94,7 +96,7 @@ docker pull python:<tag>
 For example:
 
 ```
-docker pull python:3.11-slim
+docker pull python:3.12.15-slim-trixie
 ```
 
 Use the `docker images` command to view the images you have available on your system.
@@ -155,8 +157,7 @@ Upon completion, you should be able to see your docker image if you use the foll
 docker images
 ```
 
-Take note of the difference between REPOSITORY and TAG as well as the size of the created
-image.
+Take note of the size and image tag for the image that was just built. 
 
 ### The build cache
 
@@ -207,8 +208,19 @@ and then you are returned to your terminal prompt. The container ran its `CMD`
 
 Try running the exact same command again. You will get an error that the name
 `test1` is already in use. Container names must be unique, even for containers that
-have stopped. Use `docker ps -a` to see the stopped `test1` container, then either
-remove it with `docker rm test1` or choose a different name.
+have stopped.
+
+Use `docker ps -a` to see the stopped `test1` container
+
+```bash
+docker ps -a
+```
+
+Now remove it with the following command:
+
+```bash
+docker rm test1
+```
 
 That was an example of running a docker container non-interactively. We can choose to run 
 containers `interactively`, which you'll often use to debug or troubleshoot commands. The
@@ -271,22 +283,30 @@ on the provided fastq.
 
 Build the image using the following command (from inside `advanced/`):
 
-```
+```bash
 docker build -t fastqc_container:latest .
 ```
 
 Creating the conda environment can take a few minutes. If the build fails, read
-the error message carefully. It will tell you which Dockerfile step failed.
+the error message carefully. It will tell you which Dockerfile step failed. You
+can also observe caching at play when you fix various steps in your Dockerfile. 
+
+You can see your images once again:
+
+```bash
+docker images
+```
 
 You can check that FastQC was installed correctly before going further:
 
-```
+```bash
 docker run --rm fastqc_container fastqc --version
 ```
 
 2. Try running your container once:
 
-```
+```bash
+# make a container named fastqc from the image fastqc_container
 docker run --name fastqc fastqc_container
 ```
 
@@ -310,9 +330,9 @@ docker run --volume $(pwd):/app --name fastqc2 fastqc_container
 ```
 
 The `--volume` flag takes the form `<host_path>:<container_path>`. Here we bind
-the present working directory on the host (`$(pwd)`, which is `advanced/`) to the
-`/app` directory inside the container where FastQC is running and producing its
-outputs.
+the present working directory on the host (`$(pwd)`, which is `advanced/` in your
+codespace) to the `/app` directory inside the container where FastQC is running 
+and producing its outputs.
 
 Note that a bind-mount *replaces* whatever was at `/app` in the image with the
 contents of your host directory. This works here because `example.fq.gz` also
@@ -335,21 +355,23 @@ it is good practice to clean up what you no longer need.
 Use the `docker ps -a` command to view all the containers on your system, including
 stopped ones (`docker ps` without `-a` only shows running containers).
 
-```
+```bash
 docker ps -a
 ```
 
 To remove a container, you can use the `docker rm` command.
 
-```
+```bash
 docker rm <container_name / container ID>
 ```
 
 To remove all stopped containers at once:
 
-```
+```bash
 docker container prune
 ```
+
+Before moving on, run the `docker container prune` command above. 
 
 ### Images
 
@@ -388,41 +410,39 @@ purpose of each line on your own. As you read, consider:
 We'll go through it together and talk about the specific considerations that were
 necessary. 
 
-## Pushing your image to GitHub Container Registry
+## Pushing your image to GitHub Container Registry (OPTIONAL)
 
-Every time you've used a container in your Nextflow pipelines — `container 'ghcr.io/bf528/<name>:latest'` — Nextflow pulled that image from the GitHub Container Registry (GHCR). GHCR works like Docker Hub but is tied to GitHub accounts and organizations. In this section you will tag the `python_script` image you already built and push it to your own GitHub account so that anyone (or any pipeline) could pull it.
+Every time you've used a container in your Nextflow pipelines — 
+`container 'ghcr.io/bu-cds-bf528/<name>:latest'` — Nextflow pulled that image from the
+GitHub Container Registry (GHCR). GHCR works like Docker Hub but is tied to GitHub accounts
+and organizations. In this section you will tag the `python_script` image you already built
+and push it to your own GitHub account so that anyone (or any pipeline) could pull it.
 
 In the commands below, replace `<your-github-username>` with your GitHub username
-written in **all lowercase**. GHCR image names must be lowercase, so a username
-like `JaneDoe` must be written as `janedoe`. You can print it with:
+written in **all lowercase**. GHCR image names must be lowercase/
 
-```
+```bash
 echo $GITHUB_USER | tr '[:upper:]' '[:lower:]'
+```
+
+Navigate to the `container_registry` directory and build the image:
+
+```bash
+docker build -t biopython:latest .
 ```
 
 ### 1. Authenticate to GHCR
 
-GitHub Codespaces automatically provides a `GITHUB_TOKEN` environment variable. You can try using it to log in to GHCR without creating a separate personal access token:
 
-```
-echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
-```
-
-You should see `Login Succeeded`.
-
-If the login succeeds but the push in step 3 fails with a `permission_denied` or
-`denied: installation not allowed to Create organization package` error, the
-codespace token is not allowed to publish packages. In that case:
+Navigate to Github and do the following:
 
 1. On GitHub, go to **Settings** → **Developer settings** → **Personal access tokens**
    → **Tokens (classic)** → **Generate new token (classic)**
 2. Give it a short expiration and select the `write:packages` scope
-3. Copy the token and log in with it instead (the `read -s` command hides what
-   you paste so it doesn't end up in your terminal history):
+3. Copy the token and paste it in after you enter the command below:
 
 ```
-read -s CR_PAT
-echo $CR_PAT | docker login ghcr.io -u $GITHUB_USER --password-stdin
+docker login ghcr.io -u YOUR_GITHUB_USERNAME
 ```
 
 ### 2. Tag the image with the GHCR format
@@ -433,11 +453,11 @@ Docker requires images destined for a registry to be tagged with the full regist
 ghcr.io/<your-github-username>/<image-name>:<tag>
 ```
 
-Tag the `python_script` image you built earlier (run this from anywhere; tagging
+Tag the `biopython:latest` image you built earlier (run this from anywhere; tagging
 does not depend on your current directory):
 
 ```
-docker tag python_script:latest ghcr.io/<your-github-username>/python_script:latest
+docker tag biopython:latest ghcr.io/<your-github-username>/biopython:latest
 ```
 
 Confirm the new tag appears alongside the original with `docker images`. Notice
@@ -447,7 +467,7 @@ same image, not a copy.
 ### 3. Push the image
 
 ```
-docker push ghcr.io/<your-github-username>/python_script:latest
+docker push ghcr.io/<your-github-username>/biopython:latest
 ```
 
 Docker uploads each layer individually and prints a digest when the push completes. Layers that already exist in the registry are skipped — this is the same caching mechanism you saw during `docker build`.
@@ -457,7 +477,7 @@ Docker uploads each layer individually and prints a digest when the push complet
 Newly pushed GHCR packages are private by default. To make yours pullable without authentication:
 
 1. Go to your GitHub profile → **Packages** tab
-2. Click `python_script`
+2. Click `biopython:latest`
 3. Click **Package settings** (right side of the page)
 4. Scroll to the **Danger Zone** → **Change visibility** → **Public**, and type
    the package name to confirm
@@ -466,17 +486,61 @@ Newly pushed GHCR packages are private by default. To make yours pullable withou
 
 Remove your local copies of the image so Docker is forced to pull from the registry,
 then pull it back and run it. You will need to remove any containers made from
-`python_script` first (see `docker ps -a`), for example `docker rm test1`.
+`biopython:latest` first (see `docker ps -a`), for example `docker rm test1`.
 
+```bash
+docker rmi ghcr.io/<your-github-username>/biopython:latest biopython:latest
+docker pull ghcr.io/<your-github-username>/biopython:latest
+docker run -it --rm ghcr.io/joeyorofino/biopython:latest bash
 ```
-docker rmi ghcr.io/<your-github-username>/python_script:latest python_script:latest
-docker pull ghcr.io/<your-github-username>/python_script:latest
-docker run --name from_registry ghcr.io/<your-github-username>/python_script:latest
+
+## Cleaning Up
+
+Before you end the lab, please clean up your docker images and containers by doing
+the following:
+
+```bash
+# delete all containers
+docker container prune
 ```
 
-You should see the same GC content output as before — the image running from the registry is identical to the one you built locally.
+Then, run the following:
 
-This is exactly the workflow used to build and distribute the course containers. When you run Nextflow with `-profile singularity`, Nextflow pulls from `ghcr.io/bf528/` and Singularity converts the Docker image into a `.sif` file it can run on the cluster.
+```bash
+docker rmi -f $(docker images -a -q)
+```
+
+Confirm that all images are deleted:
+
+```bash
+docker images
+```
+
+Exit the codespace and return to the Github page for the lab. Click on the green
+CODE button and delete the codespace. 
+
+## For our class
+
+Moving forward, you will switch to using pre-built container images I've provided.
+You can find them here: [Pipeline Containers](https://github.com/bu-cds-bf528/pipeline_containers).
+
+Essentially, I have built Docker images using the strategy described in `class_containers` and made them
+publicly available. Now in each of your nextflow processes, you will specify as such:
+
+```bash
+container 'ghcr.io/bu-cds-bf528/<name-of-tool>:latest'
+```
+
+When you run nextflow the **first time** with the `singularity` option set in profile 
+(e.g. nextflow run main.nf -profile singularity,cluster), Nextflow will automatically
+pull the Docker container image and convert it to a singularity image (.sif). It will then
+also run each process specified with the appropriate container using singularity. This should
+be a mostly seamless and drop-in replacement for conda moving forward. 
+
+You'll notice that the `profile` in the `nextflow.config` also sets a few other options
+that handle the mounting (how files are persisted) amongst other details. For the most part,
+you will never need to manually do most of what we covered today since Nextflow gracefully
+handles it behind the scenes for you when it comes to utilizing containers. 
 
 ## Commonly used commands
 
