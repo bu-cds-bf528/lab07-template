@@ -33,12 +33,11 @@ if one is not already open).
 ## Basic Docker Commands
 
 ### Pulling an image
-We are going to demonstrate how docker can help us install and run different
-versions of python. First, go to [docker hub](https://hub.docker.com) and search
-for python in the search bar at the top. The first search result should be the
-official python docker image (it will have a "Docker Official Image" badge).
-Click on it to go to the python docker image page. For now, run the following
-command in your terminal:
+
+One of the huge advantages of Docker is the wide availability of ready-to-go and
+verified containers. 
+
+For now, run the following command in your terminal:
 
 ```
 docker pull python

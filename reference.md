@@ -15,7 +15,7 @@ title: "Lab 06 — Docker and Containers"
 
 Containers solve the "works on my machine" problem by bundling a tool and all its dependencies into a single portable image. Any machine running Docker (or Singularity) can reproduce the exact same environment — the same tool version, the same library versions, the same behavior — regardless of what is installed on the host system.
 
-This is why Nextflow pipelines specify `container 'ghcr.io/bf528/...'`: every job runs inside a container pulled from the registry rather than relying on software being installed on the cluster node.
+This is why Nextflow pipelines specify `container 'ghcr.io/bu-cds-bf528/...'`: every job runs inside a container pulled from the registry rather than relying on software being installed on the cluster node.
 
 This lab runs in **GitHub Codespaces** rather than the SCC because the SCC does not grant users access to the Docker daemon. Codespaces provides a full Ubuntu environment with Docker pre-installed.
 
@@ -23,7 +23,7 @@ This lab runs in **GitHub Codespaces** rather than the SCC because the SCC does 
 
 ### Images vs. Containers
 
-An **image** is a read-only template: a packaged filesystem plus metadata (like the default `CMD`) that is built once from a Dockerfile or pulled from a registry. A **container** is a running (or stopped) instance created from an image, with its own writable layer on top. The relationship is like a class and an object, or a recipe and a meal: one image can be used to start many independent containers, and changes made inside a container never alter the image it came from.
+An **image** is a read-only template: a packaged filesystem plus metadata (like the default `CMD`) that is built once from a Dockerfile or pulled from a registry. A **container** is a running (or stopped) instance created from an image, with its own writable layer on top. One image can be used to start many independent containers, and changes made inside a container never alter the image it came from.
 
 | | Image | Container |
 |---|---|---|
@@ -121,7 +121,7 @@ This is the approach used for the BF528 course containers (see `class_containers
 | Pre-compiled binary | Fast | Small | Limited to what's released | The tool ships official binaries for your architecture |
 | Conda / mamba | Moderate | Moderate–large | Pinned versions via YML | The tool is on bioconda / conda-forge (most bioinformatics tools) |
 
-Before writing a Dockerfile at all, check whether someone already maintains an image: the tool's own docs, [BioContainers](https://biocontainers.pro/) (which automatically builds an image for every bioconda package), or `ghcr.io/bf528/` for this course. Whichever approach you use, always **pin versions** (`samtools-1.21`, `fastqc=0.12.1`, not `latest`), so rebuilding the image later gives you the same software.
+Before writing a Dockerfile at all, check whether someone already maintains an image: the tool's own docs, [BioContainers](https://biocontainers.pro/) (which automatically builds an image for every bioconda package), or `ghcr.io/bu-cds-bf528/` for this course. Whichever approach you use, always **pin versions** (`samtools-1.21`, `fastqc=0.12.1`, not `latest`), so rebuilding the image later gives you the same software.
 
 ## Commands Reference
 
